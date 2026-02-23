@@ -1,0 +1,250 @@
+Actúa como un Senior Frontend Engineer + UX Engineer. Crea una aplicación web completa (HTML5 + Tailwind CSS + JavaScript vanilla, sin frameworks) para BanCom llamada:
+
+"Version3 mejorada Agente de solicitud de prestamos"
+
+REQUISITOS BASE (NO NEGOCIABLES)
+- La app debe ser 100% funcional en el navegador y NO debe depender de backend.
+- Mobile-first, layout tipo WhatsApp, máximo ancho 448px.
+- Sin errores de consola.
+- Código claro, modular y comentado.
+- UI profesional, sobria, moderna y cálida.
+
+=========================================
+BASE DEL AGENTE (SPRINT 1) — NO MODIFICAR
+=========================================
+Vas a partir de un agente ya definido en el Sprint 1 (Word: “Sprint 1 Solución Agente OnBoarding de Prestamo Juan Carlos Davila.docx”).
+NO debes modificar su problema, rol, límites ni tipo de respuestas.
+
+Implementa esto como texto “fuente de verdad” dentro del código (NO lo reescribas ni lo optimices):
+1) Crea una constante:
+   const SPRINT1_SPEC_RAW = `PEGAR_AQUI_EL_TEXTO_COMPLETO_DEL_SPRINT1 (tal cual)`; 
+2) En comentarios del código, indica: “No editar Sprint1. Se consume como especificación”.
+
+Además, el comportamiento del agente en la app DEBE respetar Sprint 1:
+- Rol: Asistente–Operador de onboarding de créditos (guía + valida + prepara expediente/precalificación referencial) sin prometer aprobación garantizada.
+- Tono: cercano y empático pero profesional; claro y directo; para cliente mensajes breves (1–3 ideas), pasos/checklists.
+- Respuestas: guías paso a paso, checklists, mensajes de observación claros (qué falta/por qué/cómo subsanar), estado de solicitud (en registro/observada/en evaluación/aprobada/rechazada), precalificación referencial, y cuando aplique resumen estructurado para analista.
+- Límites: NO tomar decisiones fuera de política, NO modificar condiciones/estados core, NO prometer “100% aprobado”, NO asesoría legal/tributaria/inversión, NO omitir KYC/AML/verificación identidad/listas de riesgo.
+- Si falta info: declarar limitación + pedir dato faltante + si crítico, derivar a ejecutivo/analista y registrar razón.
+- Fuera de alcance: decirlo y orientar al canal correcto.
+
+===================================================
+OBJETIVO UX: Conversación casual, NO interrogatorio
+===================================================
+Cuando el agente haga preguntas debe sentirse conversación casual, no formulario.
+El resultado debe sonar natural (no “IA”), como sugerencia humana: clara, cálida y con pasos accionables.
+La app debe validar:
+- que cada mensaje del usuario recibe respuesta del agente,
+- y que no se avance a evaluación si faltan documentos requeridos o están observados.
+
+======================================
+GPT-4o-mini (PREPARADO / SIN BACKEND)
+======================================
+Como este MVP no usa backend:
+- Implementa un “Motor Simulado de Agente” (responde según estado del flujo + intención por palabras clave).
+- Deja preparada (pero NO activa) una función callLLM(payload) para futura integración con GPT-4o-mini.
+- Incluye un switch en UI: “Modo IA: Simulado / Integrado”.
+  - Por defecto: Simulado
+  - Integrado: mostrar aviso “Pendiente de backend/proxy seguro” y loguear payload en consola (NO llamar a internet).
+
+Implementa buildPromptPayload() que construya:
+{
+  system: SPRINT1_SPEC_RAW,
+  context: {
+    loanType, userType, convenio, currency, amount, term,
+    documentsStatus, currentStep, timeline, requestId
+  },
+  user_message: "<último mensaje usuario>",
+  validations: ["responder siempre", "no avanzar sin docs completos", "respetar límites Sprint1"]
+}
+
+========================
+DISEÑO VISUAL (OBLIG.)
+========================
+Paleta:
+- Azul BanCom primario: #1d4ed8
+- Azul secundario: #3b82f6
+- Fondo: #ffffff
+- Superficie: #f8fafc
+- Texto: #334155
+- Verde éxito: #22c55e
+- Ámbar observado: #f59e0b
+- Gris pendiente: #d1d5db
+
+Estilo:
+- Mucho espacio blanco, tarjetas limpias, bordes suaves
+- Iconografía simple y clara (SVG inline)
+- Tipografía: Plus Jakarta Sans (Google Fonts)
+- Burbujas chat: usuario (azul derecha, texto blanco), agente (gris claro izquierda, texto #334155)
+- Animaciones suaves (fade-in, hover, typing indicator)
+- Scroll suave y auto-scroll al último mensaje
+
+========================
+ESTRUCTURA UI (OBLIG.)
+========================
+1) Header: logo BanCom (simple), nombre agente personalizable, estado del agente (punto color + texto), botón ayuda
+2) Progress bar (oculta inicialmente; aparece al iniciar)
+3) Chat container con scroll
+4) Barra de acciones persistentes (visible siempre): Ver estado, Subir documentos, Hablar con ejecutivo
+5) Input area: botón adjuntar, botón cámara, input “Escribe aquí…”, botón enviar
+
+========================
+REQUISITOS FUNCIONALES
+========================
+(1) LANDING integrado
+- Vista inicial con copy corto y CTA “Solicitar préstamo”.
+- También si el usuario escribe “solicitar” en el chat, inicia el flujo.
+
+(2) FLUJO CONVERSACIONAL COMPLETO (4 pasos)
+- Bienvenida (texto exacto):
+  "Hola, soy tu asistente BanCom. Te acompaño a completar tu solicitud de préstamo paso a paso."
+- Selección tipo préstamo con tarjetas:
+  - Personal
+  - Para mi Negocio
+- Chat guiado con chips/botones:
+  Q1 Tipo de usuario: Dependiente / Independiente / Dueño de negocio
+  Q2 Convenio planilla: Sí / No
+  Q3 Moneda preferida: Soles / Dólares
+  Q4 Detalles préstamo: aquí mostrar mini-form embebido
+
+Transiciones (textos exactos):
+- "¡Excelente elección! Ahora necesito conocer un poco más sobre ti."
+- "¿Tienes convenio con alguna empresa para descuento por planilla?"
+- "Perfecto. ¿En qué moneda prefieres tu préstamo?"
+- "¡Muy bien! Ahora cuéntame los detalles de tu préstamo:"
+
+Mini-form embebido:
+- Monto (number)
+- Plazo (select: 6,12,18,24,36,48)
+- Moneda (preseleccionada por Q3, editable)
+
+Validación:
+- monto > 0
+- plazo seleccionado
+Si falla: mensaje del agente cordial indicando qué corregir.
+
+(3) SISTEMA DE DOCUMENTOS (checklist dinámico)
+Checklist 5 items:
+- DNI frente
+- DNI reverso
+- Selfie
+- Constancia de ingresos
+- Comprobante de domicilio
+
+Estados visuales:
+- Pendiente (gris)
+- Subido (verde)
+- Observado (ámbar)
+
+Interacción:
+- Cada item tiene botón “Subir” (simula carga 1s con spinner) => cambia a “Subido”.
+- Modo Observado:
+  - Agrega un “modo debug” discreto (toggle en ayuda) para marcar un doc como Observado y probar UX.
+  - Si un doc está Observado: el agente debe explicar qué falta y pedir reintento.
+Bloqueo:
+- No permitir “Validar” si existe Pendiente u Observado.
+Mensaje al entrar a documentos (texto exacto):
+"¡Perfecto! Para continuar con tu solicitud, necesito que subas los siguientes documentos:"
+
+(4) BARRA DE PROGRESO
+- Mostrar “Paso X de 4” + porcentaje.
+Pasos:
+1. Tipo de préstamo
+2. Preguntas guiadas
+3. Datos préstamo (form)
+4. Documentos
+Actualizar dinámicamente.
+
+(5) VALIDACIÓN + TIMELINE
+Tras documentos OK:
+- Mostrar mensajes exactos:
+  "¡Todos los documentos recibidos! Ahora voy a validar tu información."
+  "Estoy revisando tus documentos para validar que se vean claros y completos. Esto puede tomar unos minutos."
+- Pantalla/estado de validación con animación total 3 segundos:
+  - verificando identidad
+  - validando documentos
+  - analizando capacidad crediticia
+Cada subpaso se marca progresivamente (checks).
+
+Generar requestId: SOL-XXXXXXXX (8 alfanum mayúsculas).
+Luego mostrar timeline visual 4 estados:
+- solicitud iniciada
+- documentos recibidos
+- en evaluación
+- resultado final
+
+Resultado final SIMULADO (para demo):
+- Si monto <= 15000 y plazo <= 24 => Aprobada
+- Si no => Rechazada
+
+Textos exactos estados:
+- En registro: "Tu solicitud ha sido registrada"
+- En evaluación: "Estamos analizando tu solicitud"
+- Aprobada: "¡Felicidades! Tu préstamo fue aprobado"
+- Rechazada: "Lo sentimos, no pudimos aprobar tu solicitud"
+
+IMPORTANTE:
+- Aunque el resultado sea simulado, la redacción debe cumplir Sprint 1:
+  - No prometer garantía anticipada
+  - “Precalificación referencial” y “sujeto a validaciones finales”
+  - Si rechaza: tono cordial + alternativas (monto menor, plazo menor, hablar con ejecutivo)
+
+(6) ESTADO DEL AGENTE (header)
+- Estados con punto color:
+  - En línea (verde)
+  - Revisando (ámbar)
+  - Conectando (azul)
+- Cambiar estado durante typing / cargas / validación.
+
+(7) ACCIONES PERSISTENTES (siempre disponibles)
+- Ver estado de solicitud: muestra modal con requestId + timeline + estado actual.
+- Subir documentos: navega a checklist.
+- Hablar con ejecutivo:
+  - Inicia conversación amable (tipo WhatsApp) y luego guía al usuario a retomar el flujo de solicitud con suavidad.
+  - No romper el flujo: si está a mitad, ofrecer “¿Retomamos desde donde te quedaste?” con chips Sí/No.
+
+(8) INPUT tipo WhatsApp + intención básica
+- Input placeholder: “Escribe aquí…”
+- Botón enviar
+- Botón adjuntar (simulado)
+- Botón cámara (simulado)
+- Intención por keywords:
+  - “estado” => abrir estado
+  - “documento”, “dni”, “selfie” => abrir documentos
+  - “ayuda” => abrir ayuda
+  - “ejecutivo”, “hablar” => hablar con ejecutivo
+Garantía:
+- Todo mensaje del usuario recibe respuesta (no silencios).
+
+(9) PERSISTENCIA (opcional recomendable)
+Usar localStorage para:
+- paso actual, respuestas, documentos, requestId, timeline, estado final
+Al recargar: restaurar.
+
+========================
+ENTREGABLES EN REPLIT
+========================
+Crear proyecto con archivos:
+- index.html
+- app.js
+- styles.css (solo si hace falta; preferir Tailwind CDN)
+Incluye en index.html:
+- Google Font Plus Jakarta Sans
+- Tailwind CDN
+- Layout centrado max-w-[448px]
+- Controles y contenedores ya descritos
+
+========================
+CRITERIOS DE ACEPTACIÓN
+========================
+- Todos los botones funcionan
+- Flujo completo funciona de inicio a fin
+- Checklist bloquea si falta/observado
+- Validación 3s con subpasos
+- Timeline + SOL-XXXXXXXX
+- Acciones persistentes funcionan siempre
+- Animaciones + typing indicator + auto-scroll
+- Sin errores en consola
+- Código modular y comentado
+
+Construye el código ahora (incluye comentarios de arquitectura y un state machine explícito para los estados del flujo).
